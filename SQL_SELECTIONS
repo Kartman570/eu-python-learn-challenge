@@ -1,0 +1,103 @@
+CREATE TABLE "regions" (
+  id serial PRIMARY KEY,
+  name varchar
+);
+
+CREATE TABLE "locations" (
+  id serial PRIMARY KEY,
+  address varchar,
+  region_id integer references regions (id)
+);
+
+CREATE TABLE "departments" (
+  id serial PRIMARY KEY,
+  name varchar,
+  location_id integer references locations (id),
+  manager_id integer
+);
+
+CREATE TABLE "employees" (
+  id serial PRIMARY KEY,
+  name varchar,
+  last_name varchar,
+  hire_date date,
+  salary integer,
+  email varchar,
+  manager_id integer references employees (id),
+  department_id integer references departments (id)
+);
+
+
+
+/* sample data */
+INSERT INTO regions (name) VALUES ('reg1');
+INSERT INTO regions (name) VALUES ('reg2');
+INSERT INTO regions (name) VALUES ('reg3');
+
+INSERT INTO locations (address, region_id) VALUES ('addr1', '1');
+INSERT INTO locations (address, region_id) VALUES ('addr2', '2');
+INSERT INTO locations (address, region_id) VALUES ('addr3', '3');
+INSERT INTO locations (address, region_id) VALUES ('addr4', '1');
+INSERT INTO locations (address, region_id) VALUES ('addr5', '1');
+INSERT INTO locations (address, region_id) VALUES ('addr6', '1');
+
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep1', '1', '1');
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep2', '2', '2');
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep3', '3', '3');
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep4', '2', '2');
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep5', '1', '1');
+INSERT INTO departments (name, location_id, manager_id) VALUES ('dep6', '1', '1');
+
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('manager1', 'lastname1', '2000-12-12', '1000', 'john1@dualbootpartners.com', null, '1');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('manager2', 'lastname2', '2000-11-12', '1001', 'john2@dualbootpartners.com', null, '2');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('manager3', 'lastname3', '2000-10-12', '1002', 'john3@mail.com', null, '3');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john1', 'lastname4', '2023-07-12', '1003', 'john4@mail.com', '1', '1');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john2', 'lastname5long', '2023-07-12', '1004', 'john5@dualbootpartners.com', '2', '2');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john3', 'lastname6long', '2023-07-12', '1005', 'john6@dualbootpartners.com', '3', '3');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john4', 'lastname7long', '2023-06-12', '1006', 'john7@mail.com', '1', '1');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john5', 'lastname8long', '2023-05-12', '1007', 'john8@dualbootpartners.com', '2', '2');
+INSERT INTO employees (name, last_name, hire_date, salary, email, manager_id, department_id) VALUES ('john6', 'lastname9long', '2023-04-12', '1008', 'john9@mail.com', '3', '3');
+
+
+/*complete FK for departments*/
+ALTER TABLE departments ADD CONSTRAINT fk_departments_manager_id FOREIGN KEY (manager_id) REFERENCES employees(id);
+
+
+
+
+
+
+
+/*===SELECTIONS===*/
+
+/*Показать работников у которых нет почты или почта не в корпоративном домене (домен dualbootpartners.com)*/
+select * from employees where email not like '%@dualbootpartners.com%';
+
+
+/*Получить список работников нанятых в последние 30 дней*/
+select * from employees where hire_date > (CURRENT_DATE - INTERVAL '30 DAY');
+
+
+/*Найти максимальную и минимальную зарплату по каждому департаменту*/
+select MIN (salary),  MAX (salary) from employees;
+
+
+/*Посчитать количество работников в каждом регионе*/
+select
+ count(e.id) as "employee_count",
+ r.id as "region_id"
+from
+ employees e
+ join departments d on e.department_id = d.id
+ join locations l on d.location_id = l.id
+ join regions r on l.region_id = r.id
+group by r.id;
+
+
+/*Показать сотрудников у которых фамилия длиннее 10 символов*/
+select * from employees where length(last_name) > 10;
+
+
+/*Показать сотрудников с зарплатой выше средней по всей компании*/
+select * from employees where salary > (select avg(salary) from employees);
+
